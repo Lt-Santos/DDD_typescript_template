@@ -1,0 +1,41 @@
+import { inject, injectable } from "tsyringe";
+import "@/startup/container";
+import EventBus from "@/shared/domain/EventBus";
+import IHasher from "@/shared/domain/IHasher";
+import IIdGenerator from "@/shared/domain/IIdGenerator";
+import IUserRepository from "@/domain/user/IUserRepository";
+import User from "@/domain/user/User";
+import Result from "@/shared/core/Result";
+import { EmailAlreadyTakenError } from "@/shared/core/errors/AppError";
+import UserRegisteredEvent from "@/domain/user/events/UserRegisteredEvent";
+
+interface RegisterUserDTO {
+  email: string;
+  password: string;
+}
+
+@injectable()
+class RegisterUserUseCase {
+  constructor(
+    @inject("IUserRepository") private userRepo: IUserRepository,
+    @inject("IHasher") private readonly hasher: IHasher,
+    @inject("EventBus") private readonly eventBus: EventBus,
+    @inject("IIdGenerator") private readonly idGen: IIdGenerator
+  ) {}
+
+  public async execute(dto: RegisterUserDTO) {
+    const existingUser = await this.userRepo.existsByEmail(dto.email);
+    if (existingUser) {
+      return Result.fail(new EmailAlreadyTakenError());
+    }
+    const userId = this.idGen.generate();
+    return (await User.register(userId, dto.email, dto.password, this.hasher))
+      .asyncMap(async (user) => {
+        await this.userRepo.save(user);
+        this.eventBus.publish([new UserRegisteredEvent(user)]);
+      })
+      .execute();
+  }
+}
+
+export default RegisterUserUseCase;
