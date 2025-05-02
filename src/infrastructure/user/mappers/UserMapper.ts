@@ -4,12 +4,13 @@ import { UserDocument } from "@/infrastructure/user/models/user.model";
 import { container } from "tsyringe";
 import { ValidationError } from "@/shared/core/errors/AppError";
 import Result from "@/shared/core/Result";
+import TOKENS from "@/infrastructure/ioc/tokens";
 
 class UserMapper {
   static async toDomain(
     doc: UserDocument
   ): Promise<Result<User, ValidationError>> {
-    const hasher = container.resolve<IHasher>("IHasher");
+    const hasher = container.resolve<IHasher>(TOKENS.IHasher.key);
 
     const pipe = await User.create(
       doc.id,

@@ -49,7 +49,7 @@ class User extends AggregateRoot {
   }
 
   private static createPasswordVO(rawPassword: string, hasher: IHasher) {
-    return Password.create(rawPassword, false, hasher);
+    return Password.create(rawPassword, hasher);
   }
 
   private static createEmailVO(email: string) {

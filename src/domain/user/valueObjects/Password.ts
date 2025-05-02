@@ -5,6 +5,7 @@ import Result from "@/shared/core/Result";
 
 interface PasswordProps {
   hashedValue: string;
+  isHashed?: boolean;
 }
 
 class Password extends ValueObject<PasswordProps> {
@@ -14,16 +15,18 @@ class Password extends ValueObject<PasswordProps> {
 
   public static async create(
     rawValue: string,
-    isHashed: boolean,
-    hasher: IHasher
+    hasher: IHasher,
+    isHashed?: boolean
   ): Promise<Result<Password, ValidationError>> {
-    if (!rawValue) return Result.fail(new ValidationError("Invalid password"));
+    if (!isHashed && !Password.isValid(rawValue))
+      return Result.fail(new ValidationError("Invalid password"));
+
     const value = isHashed ? rawValue : await hasher.hash(rawValue);
-    return Result.ok(new Password({ hashedValue: value }));
+    return Result.ok(new Password({ hashedValue: value, isHashed: true }));
   }
 
   public async compare(plain: string, hasher: IHasher): Promise<boolean> {
-    return hasher.compare(plain, this.props.hashedValue);
+    return await hasher.compare(plain, this.props.hashedValue);
   }
 
   getHashedValue(forPersistence = false): Result<string, ValidationError> {
@@ -40,6 +43,24 @@ class Password extends ValueObject<PasswordProps> {
     return (
       otherHashedResult.isOk() &&
       this.props.hashedValue === otherHashedResult.getValue()
+    );
+  }
+
+  private static isValid(password: string): boolean {
+    const minLength = 8;
+    const maxLength = 64;
+    const uppercase = /[A-Z]/;
+    const lowercase = /[a-z]/;
+    const digit = /\d/;
+    const special = /[!@#$%^&*(),.?":{}|<>]/;
+
+    return (
+      password.length >= minLength &&
+      password.length <= maxLength &&
+      uppercase.test(password) &&
+      lowercase.test(password) &&
+      digit.test(password) &&
+      special.test(password)
     );
   }
 }

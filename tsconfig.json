@@ -7,8 +7,9 @@
     "emitDecoratorMetadata": true,
     "strictPropertyInitialization": false,
     "resolveJsonModule": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "isolatedModules": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules"]
+  "include": ["src/**/*", "**/*.test.ts"],
+  "exclude": ["node_modules", "dist"]
 }
