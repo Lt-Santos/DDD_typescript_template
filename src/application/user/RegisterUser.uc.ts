@@ -7,7 +7,7 @@ import IUserRepository from "@/domain/user/IUserRepository";
 import User from "@/domain/user/User";
 import Result from "@/shared/core/Result";
 import { EmailAlreadyTakenError } from "@/shared/core/errors/AppError";
-import UserRegisteredEvent from "@/domain/user/events/UserRegisteredEvent";
+import TOKENS from "@/infrastructure/ioc/tokens";
 
 interface RegisterUserDTO {
   email: string;
@@ -17,10 +17,10 @@ interface RegisterUserDTO {
 @injectable()
 class RegisterUserUseCase {
   constructor(
-    @inject("IUserRepository") private userRepo: IUserRepository,
-    @inject("IHasher") private readonly hasher: IHasher,
-    @inject("EventBus") private readonly eventBus: EventBus,
-    @inject("IIdGenerator") private readonly idGen: IIdGenerator
+    @inject(TOKENS.IUserRepository.key) private userRepo: IUserRepository,
+    @inject(TOKENS.IHasher.key) private readonly hasher: IHasher,
+    @inject(EventBus) private readonly eventBus: EventBus,
+    @inject(TOKENS.IIdGenerator.key) private readonly idGen: IIdGenerator
   ) {}
 
   public async execute(dto: RegisterUserDTO) {

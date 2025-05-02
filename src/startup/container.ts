@@ -9,14 +9,25 @@ import MongoUserRepository from "@/infrastructure/user/repositories/MongoUserRep
 import IHasher from "@/shared/domain/IHasher";
 import BcryptHasher from "@/infrastructure/crypto/BcryptHasher";
 import UserRegisteredEvent from "@/domain/user/events/UserRegisteredEvent";
+import EmailService from "@/infrastructure/email/EmailService";
+import TOKENS from "@/infrastructure/ioc/tokens";
 
-container.registerSingleton("EventBus", EventBus);
-container.registerSingleton("EmailService", ConsoleEmailService);
-container.registerSingleton<IIdGenerator>("IIdGenerator", UuidGenerator);
-container.register<IUserRepository>("IUserRepository", MongoUserRepository);
-container.register<IHasher>("IHasher", BcryptHasher);
+container.registerSingleton(EventBus, EventBus);
+container.registerSingleton<EmailService>(
+  TOKENS.EmailService.key,
+  ConsoleEmailService
+);
+container.registerSingleton<IIdGenerator>(
+  TOKENS.IIdGenerator.key,
+  UuidGenerator
+);
+container.registerSingleton<IUserRepository>(
+  TOKENS.IUserRepository.key,
+  MongoUserRepository
+);
+container.registerSingleton<IHasher>(TOKENS.IHasher.key, BcryptHasher);
 
-const eventBus = container.resolve<EventBus>("EventBus");
-const emailService = container.resolve<ConsoleEmailService>("EmailService");
+const eventBus = container.resolve(EventBus);
+const emailService = container.resolve(ConsoleEmailService);
 
-eventBus.register("UserRegisteredEvent", handleUserRegistered(emailService));
+eventBus.register(UserRegisteredEvent, handleUserRegistered(emailService));

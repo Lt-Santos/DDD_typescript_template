@@ -5,14 +5,14 @@ type EventHandler<T extends DomainEvent = DomainEvent> = (
 ) => void | Promise<void>;
 
 class EventBus {
-  private handlers: Map<string, EventHandler<DomainEvent>[]> = new Map();
+  private handlers = new Map<Function, EventHandler<any>[]>();
 
   public register<T extends DomainEvent>(
-    eventName: string,
+    eventType: new (...args: any[]) => T,
     handler: EventHandler<T>
   ): void {
-    const existing = this.handlers.get(eventName) || [];
-    this.handlers.set(eventName, [
+    const existing = this.handlers.get(eventType) || [];
+    this.handlers.set(eventType, [
       ...existing,
       handler as EventHandler<DomainEvent>,
     ]);
@@ -20,11 +20,16 @@ class EventBus {
 
   public async publish(events: DomainEvent[]): Promise<void> {
     for (const event of events) {
-      const handlers = this.handlers.get(event.name) || [];
+      const eventType = event.constructor;
+      const handlers = this.handlers.get(eventType) || [];
       for (const handler of handlers) {
         await handler(event);
       }
     }
+  }
+
+  public clear(): void {
+    this.handlers.clear();
   }
 }
 
