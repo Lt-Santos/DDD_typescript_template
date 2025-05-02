@@ -32,7 +32,7 @@ class RegisterUserUseCase {
     return (await User.register(userId, dto.email, dto.password, this.hasher))
       .asyncMap(async (user) => {
         await this.userRepo.save(user);
-        this.eventBus.publish([new UserRegisteredEvent(user)]);
+        this.eventBus.publish(user.pullDomainEvents());
       })
       .execute();
   }

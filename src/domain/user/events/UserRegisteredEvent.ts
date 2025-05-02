@@ -5,7 +5,9 @@ class UserRegisteredEvent implements DomainEvent {
   public readonly occurredAt = new Date();
   public readonly name = "UserRegisteredEvent";
 
-  constructor(public readonly user: User) {}
+  constructor(public readonly user: User) {
+    this.occurredAt = new Date();
+  }
 }
 
 export default UserRegisteredEvent;
