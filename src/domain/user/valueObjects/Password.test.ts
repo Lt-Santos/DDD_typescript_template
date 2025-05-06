@@ -1,6 +1,5 @@
 import Password from "@/domain/user/valueObjects/Password";
 import TOKENS from "@/infrastructure/ioc/tokens";
-import Result from "@/shared/core/Result";
 import { ValidationError } from "@/shared/core/errors/AppError";
 import IHasher from "@/shared/domain/IHasher";
 import { container } from "tsyringe";

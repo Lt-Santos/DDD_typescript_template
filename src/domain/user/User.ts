@@ -56,7 +56,7 @@ class User extends AggregateRoot {
     return Email.create(email);
   }
 
-  getId(): string {
+  public getId(): string {
     return this.id;
   }
 }
