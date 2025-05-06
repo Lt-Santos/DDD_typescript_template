@@ -13,7 +13,6 @@ class RegisterUserController extends BaseController {
   async executeImpl(req: Request, res: Response): Promise<void> {
     const { email, password } = req.body;
     const result = await this.registerUserUseCase.execute({ email, password });
-
     if (result.isFail()) {
       this.handleAppError(res, result.getError());
       return;

@@ -1,9 +1,9 @@
 import { inject, injectable } from "tsyringe";
 import "@/startup/container";
 import EventBus from "@/shared/domain/EventBus";
-import IHasher from "@/shared/domain/IHasher";
-import IIdGenerator from "@/shared/domain/IIdGenerator";
-import IUserRepository from "@/domain/user/IUserRepository";
+import type IHasher from "@/shared/domain/IHasher";
+import type IIdGenerator from "@/shared/domain/IIdGenerator";
+import type IUserRepository from "@/domain/user/IUserRepository";
 import User from "@/domain/user/User";
 import Result from "@/shared/core/Result";
 import { EmailAlreadyTakenError } from "@/shared/core/errors/AppError";

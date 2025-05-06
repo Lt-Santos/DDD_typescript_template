@@ -5,7 +5,7 @@ export class PipeResult<T, E> {
 
   map<U>(fn: (value: T) => U): PipeResult<U, E> {
     const newResult = this.result.then((res) => {
-      this.handleFailedResult(res);
+      if (res.isFail()) return Result.fail(res.getError());
       return Result.ok(fn(res.getValue()));
     });
 
@@ -14,7 +14,7 @@ export class PipeResult<T, E> {
 
   flatMap<U>(fn: (value: T) => Result<U, E>): PipeResult<U, E> {
     const newResult = this.result.then((res) => {
-      this.handleFailedResult(res);
+      if (res.isFail()) return Result.fail(res.getError());
       return Promise.resolve(fn(res.getValue()));
     });
 
@@ -23,7 +23,7 @@ export class PipeResult<T, E> {
 
   asyncMap<U>(fn: (value: T) => Promise<U>): PipeResult<U, E> {
     const newResult = this.result.then(async (res) => {
-      this.handleFailedResult(res);
+      if (res.isFail()) return Result.fail(res.getError());
       const mapped = await fn(res.getValue());
       return Result.ok(mapped);
     });
@@ -32,17 +32,10 @@ export class PipeResult<T, E> {
 
   asyncFlatMap<U>(fn: (value: T) => Promise<Result<U, E>>): PipeResult<U, E> {
     const newResult = this.result.then(async (res) => {
-      this.handleFailedResult(res);
+      if (res.isFail()) return Result.fail(res.getError());
       return fn(res.getValue());
     });
     return new PipeResult(newResult);
-  }
-
-  private handleFailedResult(
-    result: Result<T, E>
-  ): Result<never, E> | undefined {
-    if (result.isFail()) return Result.fail(result.getError());
-    return;
   }
 
   mapOrElse<U>(
@@ -98,6 +91,7 @@ export const combinePipeResults = <T extends any[], E>(results: {
   const combined = Promise.all(results).then((resultList) => {
     for (const result of resultList) {
       if (result.isFail()) {
+        console.log(result.getError());
         return Result.fail<T, E>(result.getError());
       }
     }
