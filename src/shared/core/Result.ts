@@ -40,38 +40,38 @@ class Result<T, E> {
     return this.error as E;
   }
 
-  public map<U>(fn: (value: T) => U): Result<U, E> {
-    if (this.isOk()) {
-      return Result.ok(fn(this.getValue()));
-    }
-    return Result.fail(this.getError());
-  }
+  // public map<U>(fn: (value: T) => U): Result<U, E> {
+  //   if (this.isOk()) {
+  //     return Result.ok(fn(this.getValue()));
+  //   }
+  //   return Result.fail(this.getError());
+  // }
 
-  public flatMap<U>(fn: (value: T) => Result<U, E>): Result<U, E> {
-    if (this.isOk()) {
-      return fn(this.getValue());
-    }
-    return Result.fail(this.getError());
-  }
+  // public flatMap<U>(fn: (value: T) => Result<U, E>): Result<U, E> {
+  //   if (this.isOk()) {
+  //     return fn(this.getValue());
+  //   }
+  //   return Result.fail(this.getError());
+  // }
 
-  public async asyncMap<U>(
-    fn: (value: T) => Promise<U>
-  ): Promise<Result<U, E>> {
-    if (this.isOk()) {
-      const mapped = await fn(this.getValue());
-      return Result.ok(mapped);
-    }
-    return Result.fail(this.getError());
-  }
+  // public async asyncMap<U>(
+  //   fn: (value: T) => Promise<U>
+  // ): Promise<Result<U, E>> {
+  //   if (this.isOk()) {
+  //     const mapped = await fn(this.getValue());
+  //     return Result.ok(mapped);
+  //   }
+  //   return Result.fail(this.getError());
+  // }
 
-  public async asyncFlatMap<U>(
-    fn: (value: T) => Promise<Result<U, E>>
-  ): Promise<Result<U, E>> {
-    if (this.isOk()) {
-      return await fn(this.getValue());
-    }
-    return Result.fail(this.getError());
-  }
+  // public async asyncFlatMap<U>(
+  //   fn: (value: T) => Promise<Result<U, E>>
+  // ): Promise<Result<U, E>> {
+  //   if (this.isOk()) {
+  //     return await fn(this.getValue());
+  //   }
+  //   return Result.fail(this.getError());
+  // }
 
   public toEither(): Either<E, T> {
     return this.isSuccess ? right(this.value as T) : left(this.error as E);

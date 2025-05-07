@@ -5,7 +5,7 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import { NODE_ENV, PORT, APP_ORIGIN } from "@/shared/constants/env";
-import connectToDatabase from "@/config/db";
+import connectToDatabase from "@/shared/config/db";
 import cookieParser from "cookie-parser";
 import errorHandler from "@/interfaces/middlewares/errorHandler";
 import { OK } from "@/shared/constants/http";

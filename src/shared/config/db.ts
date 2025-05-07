@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { CONNECTION_STRING } from "../shared/constants/env";
+import { CONNECTION_STRING } from "../constants/env";
 
 const connectToDatabase = async () => {
   try {

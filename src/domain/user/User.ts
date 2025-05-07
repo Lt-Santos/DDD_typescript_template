@@ -5,6 +5,7 @@ import UserRegisteredEvent from "./events/UserRegisteredEvent";
 import AggregateRoot from "../../shared/domain/AggregateRoot";
 import { ValidationError } from "@/shared/core/errors/AppError";
 import { combinePipeResults } from "@/shared/core/PipeResult";
+import { CreateUserType, RegisterUserType } from "./User.types";
 
 class User extends AggregateRoot {
   constructor(
@@ -16,13 +17,8 @@ class User extends AggregateRoot {
     super();
   }
 
-  public static async register(
-    id: string,
-    emailStr: string,
-    rawPassword: string,
-    hasher: IHasher
-  ) {
-    return (await this.create(id, emailStr, rawPassword, hasher, false)).map(
+  public static async register(userOptions: RegisterUserType) {
+    return (await this.create({ ...userOptions, verified: false })).onSuccess(
       (user) => {
         user.addDomainEvent(new UserRegisteredEvent(user));
         return user;
@@ -30,20 +26,15 @@ class User extends AggregateRoot {
     );
   }
 
-  public static async create(
-    id: string,
-    emailStr: string,
-    rawPassword: string,
-    hasher: IHasher,
-    verified: boolean
-  ) {
+  public static async create(createOptions: CreateUserType) {
+    const { id, emailStr, rawPassword, hasher, verified } = createOptions;
     const emailVO = this.createEmailVO(emailStr);
     const passwordVO = this.createPasswordVO(rawPassword, hasher);
 
     return combinePipeResults<[Email, Password], ValidationError>([
       Promise.resolve(emailVO),
       passwordVO,
-    ]).map(([emailVO, passwordVO]) => {
+    ]).onSuccess(([emailVO, passwordVO]) => {
       return new User(id, emailVO, passwordVO, verified);
     });
   }
