@@ -8,7 +8,8 @@
     "build": "tsc && node dist/index.js ",
     "start": "node dist/index.js",
     "test": "jest --config jest.config.js --detectOpenHandles",
-    "test-domain-user": "jest domain/user --detectOpenHandles"
+    "test-domain-user": "jest domain/user --detectOpenHandles",
+    "test-application-user": "jest application/user --detectOpenHandles"
   },
   "author": "Larz Thimoty S. Pal-ing",
   "license": "ISC",

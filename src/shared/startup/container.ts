@@ -11,8 +11,9 @@ import BcryptHasher from "@/infrastructure/crypto/BcryptHasher";
 import UserRegisteredEvent from "@/domain/user/events/UserRegisteredEvent";
 import EmailService from "@/infrastructure/email/EmailService";
 import TOKENS from "@/infrastructure/ioc/tokens";
+import IEventBus from "../domain/IEventBus";
 
-container.registerSingleton(EventBus, EventBus);
+container.registerSingleton<IEventBus>(TOKENS.IEventBus.key, EventBus);
 container.registerSingleton<EmailService>(
   TOKENS.EmailService.key,
   ConsoleEmailService

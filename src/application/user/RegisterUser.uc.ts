@@ -1,9 +1,9 @@
 import { inject, injectable } from "tsyringe";
 import "@/shared/startup/container";
-import EventBus from "@/shared/domain/EventBus";
 import type IHasher from "@/shared/domain/IHasher";
 import type IIdGenerator from "@/shared/domain/IIdGenerator";
 import type IUserRepository from "@/domain/user/IUserRepository";
+import type IEventBus from "@/shared/domain/IEventBus";
 import User from "@/domain/user/User";
 import Result from "@/shared/core/Result";
 import { EmailAlreadyTakenError } from "@/shared/core/errors/AppError";
@@ -20,7 +20,7 @@ class RegisterUserUseCase {
   constructor(
     @inject(TOKENS.IUserRepository.key) private userRepo: IUserRepository,
     @inject(TOKENS.IHasher.key) private readonly hasher: IHasher,
-    @inject(EventBus) private readonly eventBus: EventBus,
+    @inject(TOKENS.IEventBus.key) private readonly eventBus: IEventBus,
     @inject(TOKENS.IIdGenerator.key) private readonly idGen: IIdGenerator
   ) {}
 
@@ -33,7 +33,7 @@ class RegisterUserUseCase {
 
   private async executeUserRegistration(dto: RegisterUserDTO) {
     const userId = this.idGen.generate();
-    return (
+    const result = await (
       await this.createUserDomainEntity({
         id: userId,
         emailStr: dto.email,
@@ -41,15 +41,21 @@ class RegisterUserUseCase {
         hasher: this.hasher,
       })
     )
-      .onSuccessAsync(async (user) => {
-        this.saveUserToDbAndPublishEvent(user);
-      })
+      .onSuccessAsync(
+        async (user) => await this.saveUserToDbAndPublishEvent(user)
+      )
       .execute();
+    return result;
   }
 
-  private async saveUserToDbAndPublishEvent(user: User) {
-    await this.userRepo.save(user);
-    this.eventBus.publish(user.pullDomainEvents());
+  private async saveUserToDbAndPublishEvent<E extends Error>(user: User) {
+    try {
+      await this.userRepo.save(user);
+      this.eventBus.publish(user.pullDomainEvents());
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(error as E);
+    }
   }
 
   private async createUserDomainEntity(userOptions: RegisterUserType) {

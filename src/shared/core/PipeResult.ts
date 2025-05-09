@@ -1,48 +1,63 @@
 import Result from "./Result";
 
 export class PipeResult<T, E> {
-  constructor(private readonly result: Promise<Result<T, E>>) {}
+  constructor(private readonly promise: Promise<Result<T, E>>) {}
 
-  onSuccess<U>(fn: (value: T) => U): PipeResult<U, E> {
-    const newResult = this.result.then((res) => {
+  onSuccess<U>(fn: (value: T) => U | Result<U, E>): PipeResult<U, E> {
+    const next = this.promise.then((res) => {
       if (res.isFail()) return Result.fail(res.getError());
-      return Result.ok(fn(res.getValue()));
+
+      try {
+        const result = fn(res.getValue());
+        return result instanceof Result ? result : Result.ok(result);
+      } catch (error) {
+        return Result.fail(error as E);
+      }
     });
 
-    return new PipeResult(Promise.resolve(newResult));
+    return new PipeResult(Promise.resolve(next));
   }
 
-  andThen<U>(fn: (value: T) => Result<U, E>): PipeResult<U, E> {
-    const newResult = this.result.then((res) => {
+  andThen<U>(fn: (value: T) => PipeResult<U, E>): PipeResult<U, E> {
+    const next = this.promise.then(async (res) => {
       if (res.isFail()) return Result.fail(res.getError());
-      return Promise.resolve(fn(res.getValue()));
+      return await fn(res.getValue()).execute();
     });
 
+    return new PipeResult(next);
+  }
+
+  onSuccessAsync<U>(
+    fn: (value: T) => Promise<U | Result<U, E>>
+  ): PipeResult<U, E> {
+    const newResult = this.promise.then(async (res) => {
+      if (res.isFail()) return Result.fail(res.getError());
+
+      try {
+        const result = await fn(res.getValue());
+        return result instanceof Result ? result : Result.ok(result);
+      } catch (error) {
+        return Result.fail(error as E);
+      }
+    });
     return new PipeResult(newResult);
   }
 
-  onSuccessAsync<U>(fn: (value: T) => Promise<U>): PipeResult<U, E> {
-    const newResult = this.result.then(async (res) => {
+  andThenAsync<U>(
+    fn: (value: T) => Promise<PipeResult<U, E>>
+  ): PipeResult<U, E> {
+    const next = this.promise.then(async (res) => {
       if (res.isFail()) return Result.fail(res.getError());
-      const mapped = await fn(res.getValue());
-      return Result.ok(mapped);
+      return (await fn(res.getValue())).execute();
     });
-    return new PipeResult(newResult);
+    return new PipeResult(next);
   }
 
-  andThenAsync<U>(fn: (value: T) => Promise<Result<U, E>>): PipeResult<U, E> {
-    const newResult = this.result.then(async (res) => {
-      if (res.isFail()) return Result.fail(res.getError());
-      return fn(res.getValue());
-    });
-    return new PipeResult(newResult);
-  }
-
-  mapOrElse<U>(
+  async onSuccessOrElse<U>(
     onSuccess: (value: T) => U,
     onFailure: (error: E) => U
   ): Promise<U> {
-    return this.result.then((res) => {
+    return this.promise.then((res) => {
       if (res.isFail()) {
         return onFailure(res.getError());
       }
@@ -50,11 +65,11 @@ export class PipeResult<T, E> {
     });
   }
 
-  flatMapOrElse<U>(
+  async andThenOrElse<U>(
     onSuccess: (value: T) => Promise<U>,
     onFailure: (error: E) => Promise<U>
   ): Promise<U> {
-    return this.result.then(async (res) => {
+    return this.promise.then(async (res) => {
       if (res.isFail()) {
         return onFailure(res.getError());
       }
@@ -63,7 +78,7 @@ export class PipeResult<T, E> {
   }
 
   async execute(): Promise<Result<T, E>> {
-    return this.result;
+    return this.promise;
   }
 
   async unwrapOrThrow(): Promise<T> {

@@ -12,13 +12,13 @@ class UserMapper {
   ): Promise<Result<User, ValidationError>> {
     const hasher = container.resolve<IHasher>(TOKENS.IHasher.key);
 
-    const pipe = await User.create(
-      doc.id,
-      doc.email,
-      doc.password,
+    const pipe = await User.create({
+      id: doc.id,
+      emailStr: doc.email,
+      rawPassword: doc.password,
       hasher,
-      false
-    );
+      verified: false,
+    });
     const result = await pipe.execute();
 
     if (result.isFail()) return Result.fail(result.getError());

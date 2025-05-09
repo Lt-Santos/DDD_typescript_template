@@ -1,10 +1,8 @@
 import DomainEvent from "./DomainEvent";
+import EventHandler from "./EventHandler.type";
+import IEventBus from "./IEventBus";
 
-type EventHandler<T extends DomainEvent = DomainEvent> = (
-  event: T
-) => void | Promise<void>;
-
-class EventBus {
+class EventBus implements IEventBus {
   private handlers = new Map<Function, EventHandler<any>[]>();
 
   public register<T extends DomainEvent>(
