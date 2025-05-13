@@ -6,7 +6,15 @@ import { ValidationError } from "@/shared/core/errors/AppError";
 import Result from "@/shared/core/Result";
 import TOKENS from "@/infrastructure/ioc/tokens";
 
+/**
+ * Maps between persistence layer User documents and domain User aggregates.
+ */
 class UserMapper {
+  /**
+   * Maps a MongoDB user document to a domain User instance.
+   * @param doc - The user document from the database.
+   * @returns A Result wrapping the domain User or a ValidationError.
+   */
   static async toDomain(
     doc: UserDocument
   ): Promise<Result<User, ValidationError>> {
@@ -25,6 +33,11 @@ class UserMapper {
     return Result.ok(result.getValue() as User);
   }
 
+  /**
+   * Maps a domain User instance to a plain object for persistence.
+   * @param user - The domain User instance.
+   * @returns A plain object compatible with MongoDB schema.
+   */
   static toPersistence(user: User) {
     return {
       id: user.getId(),

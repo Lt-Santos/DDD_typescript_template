@@ -1,4 +1,4 @@
-class Token<T = unknown> {
+class Token {
   private readonly _key: symbol;
 
   constructor(description: string) {

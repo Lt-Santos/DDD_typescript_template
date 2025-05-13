@@ -6,9 +6,12 @@ import type IUserRepository from "@/domain/user/IUserRepository";
 import type IEventBus from "@/shared/domain/IEventBus";
 import User from "@/domain/user/User";
 import Result from "@/shared/core/Result";
-import { EmailAlreadyTakenError } from "@/shared/core/errors/AppError";
+import {
+  AppError,
+  EmailAlreadyTakenError,
+  ValidationError,
+} from "@/shared/core/errors/AppError";
 import TOKENS from "@/infrastructure/ioc/tokens";
-import { RegisterUserType } from "@/domain/user/User.types";
 
 interface RegisterUserDTO {
   email: string;
@@ -24,46 +27,44 @@ class RegisterUserUseCase {
     @inject(TOKENS.IIdGenerator.key) private readonly idGen: IIdGenerator
   ) {}
 
-  public async execute(dto: RegisterUserDTO) {
+  public async execute(
+    dto: RegisterUserDTO
+  ): Promise<Result<void, ValidationError | AppError>> {
     if (await this.userAlreadyExists(dto.email)) {
       return Result.fail(new EmailAlreadyTakenError());
     }
-    return await this.executeUserRegistration(dto);
+
+    return this.executeUserRegistration(dto);
   }
 
-  private async executeUserRegistration(dto: RegisterUserDTO) {
+  private async executeUserRegistration(
+    dto: RegisterUserDTO
+  ): Promise<Result<void, ValidationError | AppError>> {
     const userId = this.idGen.generate();
-    const result = await (
-      await this.createUserDomainEntity({
-        id: userId,
-        emailStr: dto.email,
-        rawPassword: dto.password,
-        hasher: this.hasher,
-      })
-    )
-      .onSuccessAsync(
-        async (user) => await this.saveUserToDbAndPublishEvent(user)
-      )
+    return User.register({
+      id: userId,
+      emailStr: dto.email,
+      rawPassword: dto.password,
+      hasher: this.hasher,
+    })
+      .onSuccessAsync((user) => this.saveUserToDbAndPublishEvent(user))
       .execute();
-    return result;
   }
 
-  private async saveUserToDbAndPublishEvent<E extends Error>(user: User) {
+  private async saveUserToDbAndPublishEvent(
+    user: User
+  ): Promise<Result<void, AppError>> {
     try {
       await this.userRepo.save(user);
       this.eventBus.publish(user.pullDomainEvents());
       return Result.ok();
-    } catch (error) {
-      return Result.fail(error as E);
+    } catch (err) {
+      return Result.fail(err as AppError);
     }
   }
 
-  private async createUserDomainEntity(userOptions: RegisterUserType) {
-    return await User.register(userOptions);
-  }
-
-  private async userAlreadyExists(email: string) {
-    return await this.userRepo.existsByEmail(email);
+  private async userAlreadyExists(email: string): Promise<boolean> {
+    return this.userRepo.existsByEmail(email);
   }
 }
 
