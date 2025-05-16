@@ -1,5 +1,5 @@
 import { container } from "tsyringe";
-import { Request, Response } from "express";
+import { HttpRequest, HttpResponse } from "@/shared/adapters/HttpTypes";
 import RegisterUserUseCase from "@/application/user/RegisterUser.uc";
 import { BaseController } from "@/shared/adapters/BaseController";
 
@@ -19,16 +19,15 @@ class RegisterUserController extends BaseController {
    * @param req - Express HTTP request object, expecting `email` and `password` in body.
    * @param res - Express HTTP response object.
    */
-  async executeImpl(req: Request, res: Response): Promise<void> {
+  async executeImpl(req: HttpRequest): Promise<HttpResponse> {
     const { email, password } = req.body;
     const result = await this.registerUserUseCase.execute({ email, password });
 
     if (result.isFail()) {
-      this.handleAppError(res, result.getError());
-      return;
+      return this.handleAppError(result.getError());
     }
 
-    this.created(res);
+    return this.created();
   }
 }
 

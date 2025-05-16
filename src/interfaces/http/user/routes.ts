@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { registerUserHandler } from "./user.factory";
+import { makeRegisterUserController } from "./user.factory";
+import { adaptExpressRoute } from "@/shared/adapters/ExpressAdapter";
 
 const authRoutes = Router();
 
@@ -7,6 +8,6 @@ const authRoutes = Router();
  * POST /register
  * Route handler for registering a new user.
  */
-authRoutes.post("/register", registerUserHandler);
+authRoutes.post("/register", adaptExpressRoute(makeRegisterUserController()));
 
 export default authRoutes;

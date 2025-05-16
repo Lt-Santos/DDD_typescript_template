@@ -1,6 +1,6 @@
-import { Request, Response } from "express";
 import { CREATED, INTERNAL_SERVER_ERROR, OK } from "../constants/http";
 import { AppError, isAppError } from "../core/errors/AppError";
+import { HttpRequest, HttpResponse } from "./HttpTypes";
 
 /**
  * Abstract base controller class to handle common patterns across all controllers.
@@ -13,7 +13,7 @@ export abstract class BaseController {
    * @param req - Express request object
    * @param res - Express response object
    */
-  protected abstract executeImpl(req: Request, res: Response): Promise<void>;
+  protected abstract executeImpl(req: HttpRequest): Promise<HttpResponse>;
 
   /**
    * Entry point for all controllers.
@@ -22,30 +22,17 @@ export abstract class BaseController {
    * @param req - Express request object
    * @param res - Express response object
    */
-  public execute = async (req: Request, res: Response): Promise<void> => {
+  public execute = async (req: HttpRequest): Promise<HttpResponse> => {
     try {
-      await this.executeImpl(req, res);
+      return await this.executeImpl(req);
     } catch (error) {
       console.error(`[BaseController]: Uncaught Error`, error);
-      res.status(500).json({ message: "Unexpected Error Occured" });
-      return;
+      return {
+        statusCode: INTERNAL_SERVER_ERROR,
+        body: { message: "Unexpected Error Occurred" },
+      };
     }
   };
-
-  /**
-   * Sends a JSON response with the given HTTP status code and message.
-   *
-   * @param res - Express response object
-   * @param code - HTTP status code
-   * @param message - Response message
-   */
-  public static jsonResponse(
-    res: Response,
-    code: number,
-    message: string
-  ): void {
-    res.status(code).json({ message });
-  }
 
   /**
    * Handles known application errors by sending the appropriate HTTP status and message.
@@ -54,14 +41,13 @@ export abstract class BaseController {
    * @param res - Express response object
    * @param error - AppError instance to handle
    */
-  protected handleAppError(res: Response, error: AppError): void {
+  protected handleAppError(error: AppError): HttpResponse {
     if (isAppError(error)) {
       const status = error.statusCode || 500;
       const message = error.message;
-      BaseController.jsonResponse(res, status, message);
-      return;
+      return { statusCode: status, body: { message } };
     }
-    this.fail(res, error);
+    return this.fail(error);
   }
 
   /**
@@ -70,12 +56,11 @@ export abstract class BaseController {
    * @param res - Express response object
    * @param dto - Optional response data to send
    */
-  protected ok<T>(res: Response, dto?: T): void {
-    if (dto) {
-      res.status(OK).json(dto);
-    } else {
-      res.status(OK).send();
-    }
+  protected ok<T>(dto?: T): HttpResponse {
+    return {
+      statusCode: OK,
+      body: dto,
+    };
   }
 
   /**
@@ -83,8 +68,8 @@ export abstract class BaseController {
    *
    * @param res - Express response object
    */
-  protected created(res: Response): void {
-    res.status(CREATED).send();
+  protected created(): HttpResponse {
+    return { statusCode: CREATED };
   }
 
   /**
@@ -93,10 +78,12 @@ export abstract class BaseController {
    * @param res - Express response object
    * @param error - Error to send back to client
    */
-  protected fail(res: Response, error: any): void {
-    res
-      .status(INTERNAL_SERVER_ERROR)
-      .json({ message: error instanceof Error ? error.message : error });
-    return;
+  protected fail(error: any): HttpResponse {
+    return {
+      statusCode: INTERNAL_SERVER_ERROR,
+      body: {
+        message: error instanceof Error ? error.message : error,
+      },
+    };
   }
 }

@@ -2,11 +2,11 @@
   "name": "server",
   "version": "1.0.0",
   "description": "A Rest Api for a notice board web application",
-  "main": "index.ts",
+  "main": "infrastructure/main/express/index.ts",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "build": "tsc && node dist/index.js ",
-    "start": "node dist/index.js",
+    "dev": "tsx watch src/infrastructure/main/express/index.ts",
+    "build": "tsc && node dist/infrastructure/main/express/index.js",
+    "start": "node dist/main/infrastructure/main/express/index.js",
     "test": "jest --config jest.config.js --detectOpenHandles",
     "test-domain-user": "jest domain/user --detectOpenHandles",
     "test-application-user": "jest application/user --detectOpenHandles"

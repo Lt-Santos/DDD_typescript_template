@@ -11,8 +11,3 @@ export const makeRegisterUserController = (): RegisterUserController => {
   const useCase = container.resolve(RegisterUserUseCase);
   return new RegisterUserController(useCase);
 };
-
-/**
- * Preconfigured handler function to be used in Express routes.
- */
-export const registerUserHandler = makeRegisterUserController().execute;
